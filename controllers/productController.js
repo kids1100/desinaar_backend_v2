@@ -160,10 +160,24 @@ const getAllProducts = async (req, res) => {
       products = await Product.find(filter).sort({ sequenceNo: 1 });
     } else {
       // Get all products and sort by collectionType first, then sequenceNo
-      products = await Product.find({}).sort({
-        collectionType: 2,
-        sequenceNo: 1,
-      });
+      // All: put RUTUBA first, then RIWAYAT, then anything else; each by sequenceNo
+      products = await Product.aggregate([
+        {
+          $addFields: {
+            sortPriority: {
+              $switch: {
+                branches: [
+                  { case: { $eq: [{ $toUpper: "$collectionType" }, "RUTUBA"] }, then: 0 },
+                  { case: { $eq: [{ $toUpper: "$collectionType" }, "RIWAYAT"] }, then: 1 },
+                ],
+                default: 2,
+              },
+            },
+          },
+        },
+        { $sort: { sortPriority: 1, sequenceNo: 1 } },
+        { $project: { sortPriority: 0 } },
+      ]);
     }
 
     return res.status(200).json({
