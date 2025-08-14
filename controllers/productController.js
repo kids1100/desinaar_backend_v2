@@ -161,7 +161,7 @@ const getAllProducts = async (req, res) => {
     } else {
       // Get all products and sort by collectionType first, then sequenceNo
       products = await Product.find({}).sort({
-        collectionType: 1,
+        collectionType: 2,
         sequenceNo: 1,
       });
     }
